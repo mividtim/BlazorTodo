@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTodoClient", "BlazorTodoClient\BlazorTodoClient.csproj", "{3AFC782E-CA8A-4039-929C-185D4B7805D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTodoService", "BlazorTodoService\BlazorTodoService.csproj", "{26AC9437-D92A-4C02-926F-F827CC151CD2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3AFC782E-CA8A-4039-929C-185D4B7805D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AFC782E-CA8A-4039-929C-185D4B7805D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AFC782E-CA8A-4039-929C-185D4B7805D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AFC782E-CA8A-4039-929C-185D4B7805D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26AC9437-D92A-4C02-926F-F827CC151CD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26AC9437-D92A-4C02-926F-F827CC151CD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26AC9437-D92A-4C02-926F-F827CC151CD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26AC9437-D92A-4C02-926F-F827CC151CD2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
