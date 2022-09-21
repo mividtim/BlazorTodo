@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using BlazorTodoClient.Features.Todos.Models.Dtos;
 using BlazorTodoDtos.Todos;
 using BlazorTodoService.Models;
 using BlazorTodoService.Models.Todos;
@@ -14,10 +15,7 @@ public class TodosController : ControllerBase
 {
     private readonly TodoContext _context;
 
-    public TodosController(TodoContext context)
-    {
-        _context = context;
-    }
+    public TodosController(TodoContext context) => _context = context;
 
     // GET: api/todos
     [HttpGet]
@@ -34,15 +32,13 @@ public class TodosController : ControllerBase
     {
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
-        if (todo is null)
-            return NotFound();
+        if (todo is null) return NotFound();
         return Todo.ToDto(todo);
     }
 
     // PUT: api/todos/5
-    // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutTodo(Guid id, TodoDto dto)
+    public async Task<IActionResult> PutTodo(Guid id, UpdateTodoDto dto)
     {
         if (id != dto.Id) return BadRequest();
         if (_context.Todos is null) return NotFound();
@@ -63,16 +59,15 @@ public class TodosController : ControllerBase
     }
 
     // POST: api/todos
-    // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<TodoDto>> PostTodo(TodoDto dto)
+    public async Task<ActionResult<TodoDto>> PostTodo(CreateTodoDto dto)
     {
         if (_context.Todos is null) return Problem("Entity set 'TodoContext.Todos' is null.");
         // TODO: Add UserId
         Todo todo = new() { Title = dto.Title, Completed = dto.Completed };
         _context.Todos.Add(todo);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, Todo.ToDto(todo));
+        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id });
     }
 
     // DELETE: api/todos/5
@@ -91,6 +86,9 @@ public class TodosController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<IActionResult> PatchTodo(Guid id, JsonPatchDocument<Todo> patchDocument)
     {
+        if (patchDocument.Operations.Any(operation =>
+                new [] {"/id", "/userid"}.Contains(operation.path.ToLowerInvariant())))
+            return BadRequest();
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) return NotFound();
