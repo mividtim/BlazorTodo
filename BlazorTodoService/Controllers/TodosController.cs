@@ -1,7 +1,8 @@
 using System.Collections.Immutable;
+using BlazorTodoClient.Features.Todos.Models.Dtos;
+using BlazorTodoDtos.Todos;
 using BlazorTodoService.Models;
 using BlazorTodoService.Models.Todos;
-using BlazorTodoService.Models.Todos.Dtos;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +15,7 @@ public class TodosController : ControllerBase
 {
     private readonly TodoContext _context;
 
-    public TodosController(TodoContext context)
-    {
-        _context = context;
-    }
+    public TodosController(TodoContext context) => _context = context;
 
     // GET: api/todos
     [HttpGet]
@@ -25,7 +23,7 @@ public class TodosController : ControllerBase
     {
         if (_context.Todos is null) return NotFound();
         var todos = await _context.Todos.ToArrayAsync();
-        return todos.Select(TodoDto.FromModel).ToImmutableArray();
+        return todos.Select(todo => todo.ToDto()).ToImmutableArray();
     }
 
     // GET: api/todos/5
@@ -34,17 +32,15 @@ public class TodosController : ControllerBase
     {
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
-        if (todo is null)
-            return NotFound();
-        return TodoDto.FromModel(todo);
+        if (todo is null) return NotFound();
+        return todo.ToDto();
     }
 
     // PUT: api/todos/5
-    // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutTodo(Guid id, TodoDto dto)
+    public async Task<IActionResult> PutTodo(Guid id, UpdateTodoDto dto)
     {
-        if (id != dto.Id) return BadRequest();
+        if (id != dto.Id) return UnprocessableEntity();
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) return NotFound();
@@ -63,16 +59,15 @@ public class TodosController : ControllerBase
     }
 
     // POST: api/todos
-    // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<TodoDto>> PostTodo(TodoDto dto)
+    public async Task<ActionResult<TodoDto>> PostTodo(CreateTodoDto dto)
     {
         if (_context.Todos is null) return Problem("Entity set 'TodoContext.Todos' is null.");
         // TODO: Add UserId
         Todo todo = new() { Title = dto.Title, Completed = dto.Completed };
         _context.Todos.Add(todo);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, TodoDto.FromModel(todo));
+        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id });
     }
 
     // DELETE: api/todos/5
@@ -89,12 +84,17 @@ public class TodosController : ControllerBase
     
     // PATCH: api/todos/5
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchTodo(Guid id, JsonPatchDocument<Todo> patchDocument)
+    public async Task<IActionResult> PatchTodo(Guid id, JsonPatchDocument<CreateTodoDto> patchDocument)
     {
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) return NotFound();
-        patchDocument.ApplyTo(todo);
+        // Map the updatable values to a create entity, since we don't want the user to be able to update the ID
+        var createDto = todo.ToCreateDto();
+        patchDocument.ApplyTo(createDto);
+        // Validate the changes, then map the values back to the entity and save the changes
+        if (!TryValidateModel(createDto)) return UnprocessableEntity();
+        todo.MapBackFromCreateDto(createDto);
         try
         {
             await _context.SaveChangesAsync();
