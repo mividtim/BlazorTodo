@@ -23,7 +23,7 @@ public class TodosController : ControllerBase
     {
         if (_context.Todos is null) return NotFound();
         var todos = await _context.Todos.ToArrayAsync();
-        return todos.Select(Todo.ToDto).ToImmutableArray();
+        return todos.Select(todo => todo.ToDto()).ToImmutableArray();
     }
 
     // GET: api/todos/5
@@ -33,14 +33,14 @@ public class TodosController : ControllerBase
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) return NotFound();
-        return Todo.ToDto(todo);
+        return todo.ToDto();
     }
 
     // PUT: api/todos/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutTodo(Guid id, UpdateTodoDto dto)
     {
-        if (id != dto.Id) return BadRequest();
+        if (id != dto.Id) return UnprocessableEntity();
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) return NotFound();
@@ -84,15 +84,17 @@ public class TodosController : ControllerBase
     
     // PATCH: api/todos/5
     [HttpPatch("{id}")]
-    public async Task<IActionResult> PatchTodo(Guid id, JsonPatchDocument<Todo> patchDocument)
+    public async Task<IActionResult> PatchTodo(Guid id, JsonPatchDocument<CreateTodoDto> patchDocument)
     {
-        if (patchDocument.Operations.Any(operation =>
-                new [] {"/id", "/userid"}.Contains(operation.path.ToLowerInvariant())))
-            return BadRequest();
         if (_context.Todos is null) return NotFound();
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) return NotFound();
-        patchDocument.ApplyTo(todo);
+        // Map the updatable values to a create entity, since we don't want the user to be able to update the ID
+        var createDto = todo.ToCreateDto();
+        patchDocument.ApplyTo(createDto);
+        // Validate the changes, then map the values back to the entity and save the changes
+        if (!TryValidateModel(createDto)) return UnprocessableEntity();
+        todo.MapBackFromCreateDto(createDto);
         try
         {
             await _context.SaveChangesAsync();
