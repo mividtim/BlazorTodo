@@ -1,0 +1,36 @@
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@using BlazorTodoClient.Features.Todos.Store
+@using BlazorTodoClient.Features.Todos.Models.Validation
+
+@inject TodosStateFacade Facade
+
+<EditForm Model="_validationModel" OnSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="d-flex flex-column align-items-center">
+        <ValidationSummary />
+    </div>
+    <div class="d-flex flex-row justify-content-center">
+        <div class="form-group px-2">
+            <label for="create-todo-title">Title</label>
+            <InputText  id="create-todo-title"  @bind-Value="_validationModel.Title" class="form-control"/>
+        </div>
+        <div class="form-group px-2 mt-3 d-flex flex-column align-items-center">
+            <label for="create-todo-completed">Completed?</label>
+            <InputCheckbox id="create-todo-completed" @bind-Value="_validationModel.Completed" class="form-check"/>
+        </div>
+    </div>
+    <div class="pt-2 d-flex flex-row justify-content-center">
+        <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+</EditForm>
+
+@code {
+    
+    private readonly CreateOrUpdateTodoValidationModel _validationModel = new();
+
+    private void HandleValidSubmit()
+    {
+        // We use the bang operator (!) to tell the compiler we'll know this string field will not be null
+        Facade.CreateTodo(_validationModel.Title!, _validationModel.Completed);
+    }
+}

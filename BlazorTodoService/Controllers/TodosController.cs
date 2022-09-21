@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
+using BlazorTodoDtos.Todos;
 using BlazorTodoService.Models;
 using BlazorTodoService.Models.Todos;
-using BlazorTodoService.Models.Todos.Dtos;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +25,7 @@ public class TodosController : ControllerBase
     {
         if (_context.Todos is null) return NotFound();
         var todos = await _context.Todos.ToArrayAsync();
-        return todos.Select(TodoDto.FromModel).ToImmutableArray();
+        return todos.Select(Todo.ToDto).ToImmutableArray();
     }
 
     // GET: api/todos/5
@@ -36,7 +36,7 @@ public class TodosController : ControllerBase
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null)
             return NotFound();
-        return TodoDto.FromModel(todo);
+        return Todo.ToDto(todo);
     }
 
     // PUT: api/todos/5
@@ -72,7 +72,7 @@ public class TodosController : ControllerBase
         Todo todo = new() { Title = dto.Title, Completed = dto.Completed };
         _context.Todos.Add(todo);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, TodoDto.FromModel(todo));
+        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, Todo.ToDto(todo));
     }
 
     // DELETE: api/todos/5
