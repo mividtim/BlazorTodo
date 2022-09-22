@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using BlazorTodoClient.Features.Todos.Models.Dtos;
 using BlazorTodoDtos.Todos;
 
-namespace BlazorTodoService.Models.Todos;
+namespace BlazorTodoService.Features.Todos;
 
+[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
 public class Todo
 {
     public Guid Id { get; set; }
@@ -13,7 +15,7 @@ public class Todo
     public TodoDto ToDto() =>
         new() { Id = Id, Title = Title, Completed = Completed };
 
-    public CreateTodoDto ToCreateDto() => new(Title, Completed);
+    public CreateTodoDto ToCreateDto() => new(Title ?? "", Completed);
 
     public void MapBackFromCreateDto(CreateTodoDto dto)
     {

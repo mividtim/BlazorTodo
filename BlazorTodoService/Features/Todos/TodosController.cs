@@ -1,28 +1,28 @@
 using System.Collections.Immutable;
 using BlazorTodoClient.Features.Todos.Models.Dtos;
 using BlazorTodoDtos.Todos;
-using BlazorTodoService.Models;
-using BlazorTodoService.Models.Todos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlazorTodoService.Controllers;
+namespace BlazorTodoService.Features.Todos;
 
 [Route("api/todos")]
 [ApiController]
+[Authorize(Roles="Visitor")]
 public class TodosController : ControllerBase
 {
-    private readonly TodoContext _context;
+    private readonly TodosDbContext _dbContext;
 
-    public TodosController(TodoContext context) => _context = context;
+    public TodosController(TodosDbContext dbContext) => _dbContext = dbContext;
 
     // GET: api/todos
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TodoDto>>> GetTodos()
     {
-        if (_context.Todos is null) return NotFound();
-        var todos = await _context.Todos.ToArrayAsync();
+        if (_dbContext.Todos is null) return NotFound();
+        var todos = await _dbContext.Todos.ToArrayAsync();
         return todos.Select(todo => todo.ToDto()).ToImmutableArray();
     }
 
@@ -30,8 +30,8 @@ public class TodosController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoDto>> GetTodo(Guid id)
     {
-        if (_context.Todos is null) return NotFound();
-        var todo = await _context.Todos.FindAsync(id);
+        if (_dbContext.Todos is null) return NotFound();
+        var todo = await _dbContext.Todos.FindAsync(id);
         if (todo is null) return NotFound();
         return todo.ToDto();
     }
@@ -41,14 +41,14 @@ public class TodosController : ControllerBase
     public async Task<IActionResult> PutTodo(Guid id, UpdateTodoDto dto)
     {
         if (id != dto.Id) return UnprocessableEntity();
-        if (_context.Todos is null) return NotFound();
-        var todo = await _context.Todos.FindAsync(id);
+        if (_dbContext.Todos is null) return NotFound();
+        var todo = await _dbContext.Todos.FindAsync(id);
         if (todo is null) return NotFound();
         todo.Title = dto.Title;
         todo.Completed = dto.Completed;
         try
         {
-            await _context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -62,11 +62,11 @@ public class TodosController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TodoDto>> PostTodo(CreateTodoDto dto)
     {
-        if (_context.Todos is null) return Problem("Entity set 'TodoContext.Todos' is null.");
+        if (_dbContext.Todos is null) return Problem("Entity set 'TodoContext.Todos' is null.");
         // TODO: Add UserId
         Todo todo = new() { Title = dto.Title, Completed = dto.Completed };
-        _context.Todos.Add(todo);
-        await _context.SaveChangesAsync();
+        _dbContext.Todos.Add(todo);
+        await _dbContext.SaveChangesAsync();
         return CreatedAtAction(nameof(GetTodo), new { id = todo.Id });
     }
 
@@ -74,11 +74,11 @@ public class TodosController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTodo(Guid id)
     {
-        if (_context.Todos is null) return NotFound();
-        var todo = await _context.Todos.FindAsync(id);
+        if (_dbContext.Todos is null) return NotFound();
+        var todo = await _dbContext.Todos.FindAsync(id);
         if (todo is null) return NotFound();
-        _context.Todos.Remove(todo);
-        await _context.SaveChangesAsync();
+        _dbContext.Todos.Remove(todo);
+        await _dbContext.SaveChangesAsync();
         return NoContent();
     }
     
@@ -86,8 +86,8 @@ public class TodosController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<IActionResult> PatchTodo(Guid id, JsonPatchDocument<CreateTodoDto> patchDocument)
     {
-        if (_context.Todos is null) return NotFound();
-        var todo = await _context.Todos.FindAsync(id);
+        if (_dbContext.Todos is null) return NotFound();
+        var todo = await _dbContext.Todos.FindAsync(id);
         if (todo is null) return NotFound();
         // Map the updatable values to a create entity, since we don't want the user to be able to update the ID
         var createDto = todo.ToCreateDto();
@@ -97,7 +97,7 @@ public class TodosController : ControllerBase
         todo.MapBackFromCreateDto(createDto);
         try
         {
-            await _context.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -109,6 +109,6 @@ public class TodosController : ControllerBase
 
     private bool TodoExists(Guid id)
     {
-        return (_context.Todos?.Any(e => e.Id == id)).GetValueOrDefault();
+        return (_dbContext.Todos?.Any(e => e.Id == id)).GetValueOrDefault();
     }
 }

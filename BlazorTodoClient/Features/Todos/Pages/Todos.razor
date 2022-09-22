@@ -49,8 +49,8 @@ else
             @foreach (var todo in TodosState.Value.CurrentTodos)
             {
                 <tr style="cursor: pointer;" class="text-center" @onclick="() => NavigateToTodoDetail(todo.Id)">
-                    <td>@todo.Title</td>
-                    <td>@todo.Completed</td>
+                    <td style="vertical-align: middle;">@todo.Title</td>
+                    <td style="font-size: x-large; vertical-align: middle;">@(todo.Completed ? "☑" : "☐")</td>
                 </tr>
             }
         </tbody>

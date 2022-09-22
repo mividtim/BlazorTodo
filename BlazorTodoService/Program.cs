@@ -1,26 +1,101 @@
-using BlazorTodoService.Models;
+using System.Text;
+using System.Text.Json.Serialization;
+using BlazorTodoService.Features.Authx;
+using BlazorTodoService.Features.Todos;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
-var builder = WebApplication.CreateBuilder(args);
 const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-// Add services to the container.
+// Create a builder for the application, honoring any arguments passed in from the command line
+var builder = WebApplication.CreateBuilder(args);
+
+#region Add services to the container
+
+// Add ASP.NET Core Identity with Entity Framework (the DB) for storage
+builder.Services.AddIdentity<AuthxUser, AuthxRole>(opt => opt.User.RequireUniqueEmail = true)
+    .AddRoles<AuthxRole>()
+    .AddEntityFrameworkStores<AuthxDbContext>();
+
+// Set up the database used for Authx
+builder.Services.AddDbContext<AuthxDbContext>(opt =>
+{
+    opt.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new Exception("Default connection string is not defined"));
+    if (builder.Environment.IsDevelopment())
+        opt.LogTo(Console.WriteLine);
+});
+
+// Set up the database used for the Todos feature
+builder.Services.AddDbContext<TodosDbContext>(opt =>
+{
+    opt.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new Exception("Default connection string is not defined"));
+    if (builder.Environment.IsDevelopment())
+        opt.LogTo(Console.WriteLine);
+});
+
+// Set up JWT Bearer authentication and authorization
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+var jwtSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecurityKey"]));
+builder.Services.AddSingleton<ITokenService, TokenService>(_ =>
+    new TokenService(jwtIssuer, jwtAudience, jwtSecurityKey));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opt =>
+    opt.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        // TODO: Move the key itself into AWS Secrets Manager, and place the path in the app settings
+        IssuerSigningKey = jwtSecurityKey,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true
+    });
+builder.Services.AddAuthorization(opt => opt.FallbackPolicy =
+    new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+// Add the controllers for each feature, and set up Enums to serialize and deserialize as strings on the wire
+// TODO: This works for DTOs on the way in, but they still appear to be ints on the way out
 builder.Services.AddControllers()
-    .AddNewtonsoftJson();
-builder.Services.AddDbContext<TodoContext>(opt =>
-    opt.UseInMemoryDatabase("Todos"));
+    .AddNewtonsoftJson()
+    .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+// Set up CORS so that requests from the client included in the solution work
 builder.Services.AddCors(options =>
     options.AddPolicy(name: myAllowSpecificOrigins, policy => policy
         .WithOrigins("https://localhost:7270")
         .AllowAnyHeader()
         .AllowAnyMethod()));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+#endregion
+
+// Build the web application
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Run the database migrations
+using (var scope = app.Services.CreateScope())
+{
+    var authxDbContext = scope.ServiceProvider.GetRequiredService<AuthxDbContext>();
+    await authxDbContext.Database.EnsureCreatedAsync();
+    await authxDbContext.Database.MigrateAsync();
+    var todosDbContext = scope.ServiceProvider.GetRequiredService<TodosDbContext>();
+    await todosDbContext.Database.EnsureCreatedAsync();
+    await todosDbContext.Database.MigrateAsync();
+}
+
+#region Configure the HTTP request pipeline
+
+// In development, send exceptions to the visitor, and set up Swagger for API testing and documentation
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -28,12 +103,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Redirect all incoming HTTP traffic to HTTPS
 app.UseHttpsRedirection();
 
+// Set up CORS as configured above
 app.UseCors(myAllowSpecificOrigins);
 
+// Use both authentication and authorization from ASP.NET Core Identity, as configured above
+app.UseAuthentication();
 app.UseAuthorization();
 
+// Add routes for all the controllers found with AddControllers() above
 app.MapControllers();
 
+#endregion
+
+// Start the web application
 app.Run();
