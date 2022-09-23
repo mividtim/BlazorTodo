@@ -18,6 +18,13 @@ public class AuthxDbContext : IdentityDbContext<AuthxUser, AuthxRole, Guid>
         base.OnConfiguring(optionsBuilder);
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        _logger.LogInformation("AuthxDbContext#OnModelCreating");
+        modelBuilder.ApplyConfiguration(new AuthxRoleConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
+
     [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
     public DbSet<Todo>? Todos { get; set; } = null;
 }
