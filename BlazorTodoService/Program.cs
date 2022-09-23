@@ -59,8 +59,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true
     });
-builder.Services.AddAuthorization(opt => opt.FallbackPolicy =
-    new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+builder.Services.AddAuthorization(opt =>
+    opt.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .AddAuthenticationSchemes("Bearer", JwtBearerDefaults.AuthenticationScheme)
+        .RequireRole(AuthxRoleConfiguration.VisitorRole)
+        .Build());
 
 // Add the controllers for each feature, and set up Enums to serialize and deserialize as strings on the wire
 // TODO: This works for DTOs on the way in, but they still appear to be ints on the way out

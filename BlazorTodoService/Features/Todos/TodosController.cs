@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using BlazorTodoClient.Features.Todos.Models.Dtos;
 using BlazorTodoDtos.Todos;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,6 @@ namespace BlazorTodoService.Features.Todos;
 
 [Route("api/todos")]
 [ApiController]
-[Authorize(Roles="Visitor")]
 public class TodosController : ControllerBase
 {
     private readonly TodosDbContext _dbContext;
@@ -67,7 +65,7 @@ public class TodosController : ControllerBase
         Todo todo = new() { Title = dto.Title, Completed = dto.Completed };
         _dbContext.Todos.Add(todo);
         await _dbContext.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id });
+        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, todo.ToDto());
     }
 
     // DELETE: api/todos/5
