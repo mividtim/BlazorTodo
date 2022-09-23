@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BlazorTodoService.Migrations
 {
-    [DbContext(typeof(AuthxDbContext))]
+    [DbContext(typeof(BlazorTodoDbContext))]
     [Migration("20220923001440_AddIdentityRoles")]
     partial class AddIdentityRoles
     {

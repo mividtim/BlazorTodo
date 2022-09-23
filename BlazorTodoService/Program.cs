@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using BlazorTodoService;
 using BlazorTodoService.Features.Authx;
-using BlazorTodoService.Features.Todos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -18,26 +18,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add ASP.NET Core Identity with Entity Framework (the DB) for storage
 builder.Services.AddIdentity<AuthxUser, AuthxRole>(opt => opt.User.RequireUniqueEmail = true)
     .AddRoles<AuthxRole>()
-    .AddEntityFrameworkStores<AuthxDbContext>();
+    .AddEntityFrameworkStores<BlazorTodoDbContext>();
 
-// Set up the database used for Authx
-builder.Services.AddDbContext<AuthxDbContext>(opt =>
+// Set up the database used for Authx and all features
+builder.Services.AddDbContext<BlazorTodoDbContext>(opt =>
 {
     opt.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new Exception("Default connection string is not defined"));
-    if (builder.Environment.IsDevelopment())
-        opt.LogTo(Console.WriteLine);
-});
-
-// Set up the database used for the Todos feature
-builder.Services.AddDbContext<TodosDbContext>(opt =>
-{
-    opt.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new Exception("Default connection string is not defined"));
-    if (builder.Environment.IsDevelopment())
-        opt.LogTo(Console.WriteLine);
+    if (builder.Environment.IsDevelopment()) opt.LogTo(Console.WriteLine);
 });
 
 // Set up JWT Bearer authentication and authorization
@@ -117,12 +106,9 @@ var app = builder.Build();
 // Run the database migrations
 using (var scope = app.Services.CreateScope())
 {
-    var authxDbContext = scope.ServiceProvider.GetRequiredService<AuthxDbContext>();
+    var authxDbContext = scope.ServiceProvider.GetRequiredService<BlazorTodoDbContext>();
     await authxDbContext.Database.EnsureCreatedAsync();
     await authxDbContext.Database.MigrateAsync();
-    var todosDbContext = scope.ServiceProvider.GetRequiredService<TodosDbContext>();
-    await todosDbContext.Database.EnsureCreatedAsync();
-    await todosDbContext.Database.MigrateAsync();
 }
 
 #region Configure the HTTP request pipeline

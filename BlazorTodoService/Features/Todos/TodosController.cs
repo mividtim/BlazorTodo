@@ -11,9 +11,9 @@ namespace BlazorTodoService.Features.Todos;
 [ApiController]
 public class TodosController : ControllerBase
 {
-    private readonly TodosDbContext _dbContext;
+    private readonly BlazorTodoDbContext _dbContext;
 
-    public TodosController(TodosDbContext dbContext) => _dbContext = dbContext;
+    public TodosController(BlazorTodoDbContext dbContext) => _dbContext = dbContext;
 
     // GET: api/todos
     [HttpGet]

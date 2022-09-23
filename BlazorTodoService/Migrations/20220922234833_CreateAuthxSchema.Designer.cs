@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BlazorTodoService.Migrations
 {
-    [DbContext(typeof(AuthxDbContext))]
+    [DbContext(typeof(BlazorTodoDbContext))]
     [Migration("20220922234833_CreateAuthxSchema")]
     partial class CreateAuthxSchema
     {

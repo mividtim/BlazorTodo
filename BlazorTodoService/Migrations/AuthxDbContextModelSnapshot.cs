@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace BlazorTodoService.Migrations
 {
-    [DbContext(typeof(AuthxDbContext))]
+    [DbContext(typeof(BlazorTodoDbContext))]
     partial class AuthxDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
