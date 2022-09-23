@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using BlazorTodoService.Features.Authx;
@@ -61,7 +60,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     });
 builder.Services.AddAuthorization(opt =>
     opt.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
         .AddAuthenticationSchemes("Bearer", JwtBearerDefaults.AuthenticationScheme)
         .RequireRole(AuthxRoleConfiguration.VisitorRole)
         .Build());
@@ -92,7 +90,22 @@ builder.Services.AddSwaggerGen(opt =>
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
+    });
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
