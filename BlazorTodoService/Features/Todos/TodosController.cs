@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
 using BlazorTodoClient.Features.Todos.Models.Dtos;
 using BlazorTodoDtos.Todos;
+using BlazorTodoService.Features.Authx;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,24 +14,29 @@ namespace BlazorTodoService.Features.Todos;
 public class TodosController : ControllerBase
 {
     private readonly BlazorTodoDbContext _dbContext;
+    private readonly UserManager<AuthxUser> _userManager;
 
-    public TodosController(BlazorTodoDbContext dbContext) => _dbContext = dbContext;
+    public TodosController(BlazorTodoDbContext dbContext, UserManager<AuthxUser> userManager) =>
+        (_dbContext, _userManager) = (dbContext, userManager);
 
     // GET: api/todos
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TodoDto>>> GetTodos()
+    public ActionResult<IEnumerable<TodoDto>> GetTodos()
     {
         if (_dbContext.Todos is null) return NotFound();
-        var todos = await _dbContext.Todos.ToArrayAsync();
-        return todos.Select(todo => todo.ToDto()).ToImmutableArray();
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+        return _dbContext.Todos
+            .Where(todo => todo.UserId == userId)
+            .Select(todo => todo.ToDto())
+            .ToImmutableArray();
     }
 
     // GET: api/todos/5
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoDto>> GetTodo(Guid id)
     {
-        if (_dbContext.Todos is null) return NotFound();
-        var todo = await _dbContext.Todos.FindAsync(id);
+        var todo = await GetTodoForCurrentUser(id);
         if (todo is null) return NotFound();
         return todo.ToDto();
     }
@@ -39,8 +46,7 @@ public class TodosController : ControllerBase
     public async Task<IActionResult> PutTodo(Guid id, UpdateTodoDto dto)
     {
         if (id != dto.Id) return UnprocessableEntity();
-        if (_dbContext.Todos is null) return NotFound();
-        var todo = await _dbContext.Todos.FindAsync(id);
+        var todo = await GetTodoForCurrentUser(id);
         if (todo is null) return NotFound();
         todo.Title = dto.Title;
         todo.Completed = dto.Completed;
@@ -60,12 +66,20 @@ public class TodosController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TodoDto>> PostTodo(CreateTodoDto dto)
     {
-        if (_dbContext.Todos is null) return Problem("Entity set 'TodoContext.Todos' is null.");
-        // TODO: Add UserId
-        Todo todo = new() { Title = dto.Title, Completed = dto.Completed };
-        _dbContext.Todos.Add(todo);
-        await _dbContext.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, todo.ToDto());
+        if (_dbContext.Todos is null) return NotFound();
+        try
+        {
+            var userId = GetUserId() ?? throw new UnauthorizedAccessException();
+            Todo todo = new() { Title = dto.Title, Completed = dto.Completed, UserId = userId };
+            _dbContext.Todos.Add(todo);
+            await _dbContext.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetTodo), new { id = todo.Id }, todo.ToDto());
+        }
+        catch (Exception e)
+        {
+            if (e is UnauthorizedAccessException) return Unauthorized();
+            throw;
+        }
     }
 
     // DELETE: api/todos/5
@@ -73,7 +87,7 @@ public class TodosController : ControllerBase
     public async Task<IActionResult> DeleteTodo(Guid id)
     {
         if (_dbContext.Todos is null) return NotFound();
-        var todo = await _dbContext.Todos.FindAsync(id);
+        var todo = await GetTodoForCurrentUser(id);
         if (todo is null) return NotFound();
         _dbContext.Todos.Remove(todo);
         await _dbContext.SaveChangesAsync();
@@ -107,6 +121,20 @@ public class TodosController : ControllerBase
 
     private bool TodoExists(Guid id)
     {
-        return (_dbContext.Todos?.Any(e => e.Id == id)).GetValueOrDefault();
+        return (_dbContext.Todos?.Any(todo => todo.Id == id)).GetValueOrDefault();
+    }
+
+    private Guid? GetUserId()
+    {
+        if (!Guid.TryParse(_userManager.GetUserId(User), out var userId)) return null;
+        return userId;
+    }
+
+    private async Task<Todo?> GetTodoForCurrentUser(Guid id)
+    {
+        if (_dbContext.Todos is null) return null;
+        var userId = GetUserId();
+        if (userId is null) return null;
+        return await _dbContext.Todos.FirstOrDefaultAsync(todo => todo.UserId == userId && todo.Id == id);
     }
 }
