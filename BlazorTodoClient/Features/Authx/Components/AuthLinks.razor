@@ -1,0 +1,11 @@
+@using System.IdentityModel.Tokens.Jwt
+<AuthorizeView>
+    <Authorized>
+        Hello, @(context.User.FindFirst(JwtRegisteredClaimNames.Name)?.Value ?? "unknown user")
+        <a href="/logout">Log out</a>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/register">Register</a>
+        <a href="/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>

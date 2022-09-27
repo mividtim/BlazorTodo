@@ -1,3 +1,4 @@
+using BlazorTodoClient.Features.Authx.Store.UserLoginOrLogOut;
 using BlazorTodoClient.Store.State;
 using Fluxor;
 
@@ -16,4 +17,8 @@ public static class LoadTodosActionsReducer
     [ReducerMethod]
     public static TodosState ReduceLoadTodosFailureAction(TodosState state, LoadTodosFailureAction action) =>
         new(false, action.ErrorMessage, null, state.CurrentTodo);
+
+    [ReducerMethod]
+    public static TodosState UserLoggedOut(TodosState state, UserLoginOrLogOutAction _) =>
+        new(false, null, null, null);
 }

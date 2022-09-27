@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-@inject ILogger<MainLayout> Logger;
+@using BlazorTodoClient.Features.Authx.Components
 
 <div class="sidebar">
     <NavMenu />
@@ -8,31 +8,9 @@
 
 <div class="main">
     <div class="top-row px-4">
-        @if (LoggedIn) {
-            <a href="/logout" class="ml-md-auto">Logout</a>
-        }
-        else {
-            <a href="/login" class="ml-md-auto">Login</a>
-        }
+        <AuthLinks />
     </div>
     <div class="content px-4">
         @Body
     </div>
 </div>
-
-@code
-{
-    [CascadingParameter]
-    public Task<AuthenticationState>? AuthState { get; set; }
-
-    private bool LoggedIn { get; set; }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await base.OnParametersSetAsync();
-        if (AuthState is null) return;
-        var authState = await AuthState;
-        Logger.LogInformation("Logged in? {LoggedIn}", authState.User.Identity?.IsAuthenticated == true);
-        LoggedIn = authState.User.Identity?.IsAuthenticated == true;
-    }
-}

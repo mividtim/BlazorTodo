@@ -4,7 +4,7 @@ namespace BlazorTodoClient.Features.Authx;
 
 public interface IAuthxService
 {
-    Task<UserDto> RegisterUser(CreateUserDto dto);
+    Task<UserDto> CreateUser(CreateUserDto dto);
     Task Login(CreateAuthxTokensDto dto);
     Task Logout();
 }

@@ -1,6 +1,9 @@
+using System.Net;
 using Blazored.LocalStorage;
+using BlazorTodoClient.Features.Authx.Store.UserLoginOrLogOut;
 using BlazorTodoClient.ServiceClients;
 using BlazorTodoDtos.Authx;
+using Fluxor;
 using Microsoft.AspNetCore.Components.Authorization;
 using Newtonsoft.Json;
 
@@ -12,19 +15,30 @@ public class AuthxService : IAuthxService
     private readonly AuthxMessageHandler _authxMessageHandler;
     private readonly AuthxStateProvider _authxStateProvider;
     private readonly ILocalStorageService _localStorage;
+    private readonly IDispatcher _dispatcher;
 
     public AuthxService(
         BlazorTodoApiService apiService,
         AuthxMessageHandler authxMessageHandler,
         AuthenticationStateProvider authenticationStateProvider,
-        ILocalStorageService localStorage
+        ILocalStorageService localStorage,
+        IDispatcher dispatcher
     ) =>
-        (_apiService, _authxMessageHandler, _authxStateProvider, _localStorage) =
-        (apiService, authxMessageHandler, (AuthxStateProvider)authenticationStateProvider, localStorage);
+        (_apiService, _authxMessageHandler, _authxStateProvider, _localStorage, _dispatcher) =
+        (apiService, authxMessageHandler, (AuthxStateProvider)authenticationStateProvider, localStorage, dispatcher);
 
-    public Task<UserDto> RegisterUser(CreateUserDto dto)
+    public async Task<UserDto> CreateUser(CreateUserDto dto)
     {
-        throw new NotImplementedException();
+        var createResult = await _apiService.PostAsync("authx/user", dto);
+        if (!createResult.IsSuccessStatusCode)
+        {
+            if (createResult.StatusCode == HttpStatusCode.BadRequest)
+                throw new FormatException();
+            throw new ApplicationException();
+        }
+        var jsonString = await createResult.Content.ReadAsStringAsync();
+        var user = JsonConvert.DeserializeObject<UserDto>(jsonString);
+        return user;
     }
 
     public async Task Login(CreateAuthxTokensDto dto)
@@ -36,6 +50,7 @@ public class AuthxService : IAuthxService
         await _localStorage.SetItemAsync(AuthxStateProvider.LocalStorageKeyIdentityToken, authTokens.IdentityToken);
         _authxStateProvider.NotifyUserLoggedIn(authTokens.IdentityToken);
         _authxMessageHandler.AddBearer(authTokens.IdentityToken);
+        _dispatcher.Dispatch(new UserLoginOrLogOutAction());
     }
 
     public async Task Logout()
@@ -43,5 +58,6 @@ public class AuthxService : IAuthxService
         await _localStorage.RemoveItemAsync(AuthxStateProvider.LocalStorageKeyIdentityToken);
         _authxStateProvider.NotifyUserLoggedOut();
         _authxMessageHandler.RemoveBearer();
+        _dispatcher.Dispatch(new UserLoginOrLogOutAction());
     }
 }
