@@ -1,7 +1,42 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+@using System.IdentityModel.Tokens.Jwt
 
-<h1>Hello, world!</h1>
+<PageTitle>Home</PageTitle>
 
-Welcome to your new app.
+<h1>Blazor To-Do Application</h1>
+
+<AuthorizeView>
+    <Authorized>
+        @if (IsLoggedIn)
+        {
+            <div>
+                Welcome to Blazor To-Do, @(context.User.FindFirst(JwtRegisteredClaimNames.Name)?.Value ?? "unknown user")!
+            </div>
+        }
+        else
+        {
+            <div>Welcome to Blazor To-Do!</div>
+        }
+    </Authorized>
+    <NotAuthorized>Welcome to Blazor To-Do!</NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    private bool IsLoggedIn { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthState is null)
+        {
+            IsLoggedIn = false;
+            return;
+        }
+        var authState = await AuthState;
+        IsLoggedIn = authState.User.Identity?.IsAuthenticated == true;
+        await base.OnParametersSetAsync();
+    }
+}

@@ -48,18 +48,17 @@ public class AuthxController : ControllerBase
     }
 
     [HttpPost("token")]
-    public async Task<ActionResult<AuthTokensDto>> CreateToken(string userName, string password)
+    public async Task<ActionResult<AuthTokensDto>> CreateToken(CreateAuthxTokensDto dto)
     {
-        var user = await _userManager.FindByNameAsync(userName.Trim());
+        var user = await _userManager.FindByNameAsync(dto.UserName.Trim());
         if (user is null)
         {
-            _logger.LogInformation("User with username {UserName} not found", userName);
+            _logger.LogInformation("User with username {UserName} not found", dto.UserName);
             return Unauthorized();
         }
-        var result = await _signInManager.PasswordSignInAsync(user, password, true, false);
-        if (!result.Succeeded)
+        if (!await _userManager.CheckPasswordAsync(user, dto.Password))
         {
-            _logger.LogInformation("Incorrect password for user with userName {UserName}", userName);
+            _logger.LogInformation("Incorrect password for user with userName {UserName}", dto.UserName);
             return Unauthorized();
         }
         var roles = await _userManager.GetRolesAsync(user);

@@ -54,9 +54,7 @@ builder.Services.AddAuthorization(opt =>
         .Build());
 
 // Add the controllers for each feature, and set up Enums to serialize and deserialize as strings on the wire
-// TODO: This works for DTOs on the way in, but they still appear to be ints on the way out
 builder.Services.AddControllers()
-    .AddNewtonsoftJson()
     .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Set up CORS so that requests from the client included in the solution work

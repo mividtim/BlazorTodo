@@ -1,6 +1,7 @@
 using BlazorTodoClient.ServiceClients;
 using BlazorTodoDtos.Todos;
 using Fluxor;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BlazorTodoClient.Features.Todos.Store.UpdateTodo;
 
@@ -17,13 +18,31 @@ public class UpdateTodoEffect : Effect<UpdateTodoAction>
         try
         {
             _logger.LogInformation("Updating todo {ActionId}...", action.Id);
-            var updateResponse = await _apiService.PutAsync($"todos/{action.Id}", action.Todo);
+            HttpResponseMessage? updateResponse;
+            try
+            {
+                updateResponse = await _apiService.PutAsync($"todos/{action.Id}", action.Todo);
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+                return;
+            }
             if (!updateResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Error updating todo: {updateResponse.ReasonPhrase}");
             }
             _logger.LogInformation("Todo updated successfully!");
-            var updatedTodo = await _apiService.GetAsync<TodoDto>($"todos/{action.Id}");
+            TodoDto? updatedTodo;
+            try
+            {
+                updatedTodo = await _apiService.GetAsync<TodoDto>($"todos/{action.Id}");
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+                return;
+            }
             dispatcher.Dispatch(new UpdateTodoSuccessAction(updatedTodo!));
         }
         catch (Exception e)

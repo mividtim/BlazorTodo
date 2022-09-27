@@ -1,12 +1,14 @@
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @page "/todos/{todoId}"
-@using BlazorTodoClient.Store.State
+
 @using BlazorTodoClient.Features.Todos.Models.Validation
 @using BlazorTodoClient.Features.Todos.Store
 
 @inject IState<TodosState> TodosState
 @inject TodosStateFacade Facade
+@inject NavigationManager Navigation
+@inject ILogger<TodoDetail> Logger
 
 <h3 class="text-center mb-3">Detail for to-do item @(TodosState.Value.CurrentTodo?.Title ?? TodoId)</h3>
 
@@ -29,7 +31,7 @@ else if (TodosState.Value.HasCurrentErrors || TodosState.Value.CurrentTodo is nu
 }
 else
 {
-    <EditForm Model="validationModel" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="_validationModel" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
         <div class="d-flex flex-column align-items-center">
             <ValidationSummary />
@@ -37,11 +39,11 @@ else
         <div class="d-flex flex-column align-items-center py-1">
             <div class="py-2 d-flex flex-row align-items-center">
                 <strong class="px-2">Completed:</strong>
-                <InputCheckbox class="form-check" @bind-Value="validationModel.Completed" />
+                <InputCheckbox class="form-check" @bind-Value="_validationModel.Completed" />
             </div>
             <div class="py-2 d-flex flex-row align-items-center">
                 <strong class="px-2">Title:</strong>
-                <InputText class="form-control" @bind-Value="validationModel.Title" />
+                <InputText class="form-control" @bind-Value="_validationModel.Title" />
             </div>
             <div class="d-flex flex-row justify-content-center pt-2">
                 <button type="submit" class="btn btn-secondary">Update</button>
@@ -56,34 +58,54 @@ else
 }
 
 @code {
-    public CreateOrUpdateTodoValidationModel validationModel = new();
+    private readonly CreateOrUpdateTodoValidationModel _validationModel = new();
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
 
     [Parameter]
     public string? TodoId { get; set; }
 
-    protected override void OnInitialized()
+    private void NotLoggedIn()
     {
+        Logger.LogInformation("Redirecting to login page");
+        Navigation.NavigateTo("/login");
+    }
+
+    protected override async void OnInitialized()
+    {
+        base.OnInitialized();
+        if (AuthState is null)
+        {
+            NotLoggedIn();
+            return;
+        }
+        var authState = await AuthState;
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            NotLoggedIn();
+            return;
+        }
         // Issue the load todos command, if no current todos have been loaded
         if (TodosState.Value.CurrentTodos is null)
             Facade.LoadTodos();
         // Load the to-do detail on initial page navigation
-        if  (Guid.TryParse(TodoId, out var parsedId))
+        if (Guid.TryParse(TodoId, out var parsedId))
             Facade.LoadTodoById(parsedId);
         // Register a state change to assign the validation fields
         TodosState.StateChanged += (sender, _) =>
         {
             var state = sender as State<TodosState>;
             if (state?.Value.CurrentTodo is null) return;
-            validationModel.Title = state.Value.CurrentTodo.Title ?? "missing";
-            validationModel.Completed = state.Value.CurrentTodo.Completed;
+            _validationModel.Title = state.Value.CurrentTodo.Title ?? "missing";
+            _validationModel.Completed = state.Value.CurrentTodo.Completed;
             StateHasChanged();
         };
-        base.OnInitialized();
     }
 
     private void HandleValidSubmit()
     {
         // We use the bang operator (!) to tell the compiler we'll know this string field will not be null
-        Facade.UpdateTodo(TodosState.Value.CurrentTodo!.Id, validationModel.Title!, validationModel.Completed);
+        Facade.UpdateTodo(TodosState.Value.CurrentTodo!.Id, _validationModel.Title!, _validationModel.Completed);
     }
 }

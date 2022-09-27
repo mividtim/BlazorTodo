@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using BlazorTodoClient.ServiceClients;
 using BlazorTodoDtos.Todos;
 using Fluxor;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BlazorTodoClient.Features.Todos.Store.CreateTodo;
 
@@ -18,12 +19,20 @@ public class CreateTodoEffect : Effect<CreateTodoAction>
         try
         {
             _logger.LogInformation("Creating todo {ActionTodo}...", action.Todo);
-            var createResponse = await _apiService.PostAsync("todos", action.Todo);
+            HttpResponseMessage? createResponse;
+            try
+            {
+                createResponse = await _apiService.PostAsync("todos", action.Todo);
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+                return;
+            }
             if (!createResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Error creating todo: {createResponse.ReasonPhrase}");
             }
-
             _logger.LogInformation("Todo created successfully!");
             var createdTodo = await createResponse.Content.ReadFromJsonAsync<TodoDto>();
             dispatcher.Dispatch(new CreateTodoSuccessAction(createdTodo!));

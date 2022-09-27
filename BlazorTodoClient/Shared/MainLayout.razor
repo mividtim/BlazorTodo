@@ -1,14 +1,38 @@
 ﻿@inherits LayoutComponentBase
 
+@inject ILogger<MainLayout> Logger;
+
 <div class="sidebar">
     <NavMenu />
 </div>
 
 <div class="main">
     <div class="top-row px-4">
-        <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
+        @if (LoggedIn) {
+            <a href="/logout" class="ml-md-auto">Logout</a>
+        }
+        else {
+            <a href="/login" class="ml-md-auto">Login</a>
+        }
     </div>
     <div class="content px-4">
         @Body
     </div>
 </div>
+
+@code
+{
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    private bool LoggedIn { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (AuthState is null) return;
+        var authState = await AuthState;
+        Logger.LogInformation("Logged in? {LoggedIn}", authState.User.Identity?.IsAuthenticated == true);
+        LoggedIn = authState.User.Identity?.IsAuthenticated == true;
+    }
+}

@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using BlazorTodoClient.Features.Todos.Models.Dtos;
 using BlazorTodoDtos.Todos;
 using BlazorTodoService.Features.Authx;
@@ -13,11 +15,16 @@ namespace BlazorTodoService.Features.Todos;
 [ApiController]
 public class TodosController : ControllerBase
 {
+    private readonly ILogger<TodosController> _logger;
     private readonly BlazorTodoDbContext _dbContext;
     private readonly UserManager<AuthxUser> _userManager;
 
-    public TodosController(BlazorTodoDbContext dbContext, UserManager<AuthxUser> userManager) =>
-        (_dbContext, _userManager) = (dbContext, userManager);
+    public TodosController(
+        ILogger<TodosController> logger,
+        BlazorTodoDbContext dbContext,
+        UserManager<AuthxUser> userManager
+    ) =>
+        (_logger, _dbContext, _userManager) = (logger, dbContext, userManager);
 
     // GET: api/todos
     [HttpGet]
@@ -126,7 +133,13 @@ public class TodosController : ControllerBase
 
     private Guid? GetUserId()
     {
-        if (!Guid.TryParse(_userManager.GetUserId(User), out var userId)) return null;
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            _logger.LogWarning("UserId not found in claims");
+            return null;
+        }
+
+        _logger.LogInformation("UserId is {UserId}", userId);
         return userId;
     }
 

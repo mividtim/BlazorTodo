@@ -18,11 +18,13 @@ public class TokenService : ITokenService
     public string CreateToken(AuthxUser user, IEnumerable<string> roles)
     {
         var claims = new List<Claim> {
-            new(JwtRegisteredClaimNames.Sub, user.UserName),
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.Role, string.Join(";", roles))
         };
+        var name = user.PreferredName ?? user.ToDto().FullName;
+        if (name is not null) claims.Add(new(JwtRegisteredClaimNames.Name, name));
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         var credentials = new SigningCredentials(_jwtSecurityKey, SecurityAlgorithms.HmacSha512Signature);
         var tokenDescriptor = new SecurityTokenDescriptor
         {

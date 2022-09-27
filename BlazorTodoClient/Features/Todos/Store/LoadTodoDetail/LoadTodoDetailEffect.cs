@@ -1,6 +1,7 @@
 using BlazorTodoClient.ServiceClients;
 using BlazorTodoDtos.Todos;
 using Fluxor;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BlazorTodoClient.Features.Todos.Store.LoadTodoDetail;
 
@@ -17,7 +18,16 @@ public class LoadTodoDetailEffect : Effect<LoadTodoDetailAction>
         try
         {
             _logger.LogInformation("Loading todo {ActionId}...", action.Id);
-            var todoResponse = await _apiService.GetAsync<TodoDto>($"todos/{action.Id}");
+            TodoDto? todoResponse;
+            try
+            {
+                todoResponse = await _apiService.GetAsync<TodoDto>($"todos/{action.Id}");
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+                return;
+            }
             _logger.LogInformation("Todo {ActionId} loaded successfully!", action.Id);
             dispatcher.Dispatch(new LoadTodoDetailSuccessAction(todoResponse!));
         }

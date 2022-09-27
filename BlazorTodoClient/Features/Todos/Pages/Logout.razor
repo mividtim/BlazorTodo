@@ -1,0 +1,17 @@
+@page "/logout"
+@using BlazorTodoClient.Features.Authx
+
+@code {
+    [Inject]
+#pragma warning disable CS8618
+        public IAuthxService AuthxService { get; set; }
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+#pragma warning restore CS8618
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthxService.Logout();
+        NavigationManager.NavigateTo("/");
+    }
+}

@@ -1,5 +1,6 @@
 using BlazorTodoClient.ServiceClients;
 using Fluxor;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BlazorTodoClient.Features.Todos.Store.DeleteTodo;
 
@@ -16,7 +17,16 @@ public class DeleteTodoEffect : Effect<DeleteTodoAction>
         try
         {
             _logger.LogInformation("Deleting todo {ActionId}...", action.Id);
-            var deleteResponse = await _apiService.DeleteAsync($"todos/{action.Id}");
+            HttpResponseMessage? deleteResponse;
+            try
+            {
+                deleteResponse = await _apiService.DeleteAsync($"todos/{action.Id}");
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+                return;
+            }
             if (!deleteResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Error deleting todo: {deleteResponse.ReasonPhrase}");

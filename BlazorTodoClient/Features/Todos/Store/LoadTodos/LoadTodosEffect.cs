@@ -1,6 +1,7 @@
 using BlazorTodoClient.ServiceClients;
 using BlazorTodoDtos.Todos;
 using Fluxor;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace BlazorTodoClient.Features.Todos.Store.LoadTodos;
 
@@ -17,7 +18,16 @@ public class LoadTodosEffect : Effect<LoadTodosAction>
         try
         {
             _logger.LogInformation("Loading todos...");
-            var todosResponse = await _apiService.GetAsync<IEnumerable<TodoDto>>("todos");
+            IEnumerable<TodoDto>? todosResponse;
+            try
+            {
+                todosResponse = await _apiService.GetAsync<IEnumerable<TodoDto>>("todos");
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+                return;
+            }
             _logger.LogInformation("Todos loaded successfully!");
             dispatcher.Dispatch(new LoadTodosSuccessAction((todosResponse ?? new List<TodoDto>(0)).Take(5)));
         }
