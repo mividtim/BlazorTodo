@@ -1,4 +1,4 @@
-@inherits BlazorTodoClient.Features.Authx.Components.AuthxRequiredComponent
+@inherits BlazorTodoClient.Features.Authx.Components.AuthxAwareComponent
 
 @page "/todos/{todoId}"
 
@@ -64,6 +64,7 @@ else
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+        if (!await EnsureAuthAndRedirect()) return;
         // Issue the load todos command, if no current todos have been loaded
         if (TodosState.Value.CurrentTodos is null)
             TodosService.LoadTodos();

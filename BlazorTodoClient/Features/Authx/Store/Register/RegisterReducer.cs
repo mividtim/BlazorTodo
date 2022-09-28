@@ -4,7 +4,7 @@ using Fluxor;
 namespace BlazorTodoClient.Features.Authx.Store.Register;
 
 [SuppressMessage("ReSharper", "UnusedType.Global")]
-public class RegisterReducer
+public static class RegisterReducer
 {
     [ReducerMethod]
     public static AuthxState ReduceRegister(AuthxState state, RegisterAction action) =>

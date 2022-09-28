@@ -1,13 +1,14 @@
-@inherits BlazorTodoClient.Features.Authx.Components.AuthxRequiredComponent
+@inherits BlazorTodoClient.Features.Authx.Components.AuthxAwareComponent
 
 @page "/todos"
 
 @using BlazorTodoClient.Features.Todos.Components
 @using BlazorTodoClient.Features.Todos.Store
+@using BlazorTodoClient.Features.Navigation.Store
 
 @inject IState<TodosState> TodosState
 @inject ITodosService TodosService
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
 <h3 class="text-center mb-3">Todos</h3>
 
@@ -60,6 +61,7 @@ else
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+        if (!await EnsureAuthAndRedirect()) return;
         if (TodosState.Value.CurrentTodos is null)
             TodosService.LoadTodos();
     }

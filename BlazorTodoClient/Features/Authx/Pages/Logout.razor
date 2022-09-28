@@ -1,8 +1,0 @@
-@page "/logout"
-@using BlazorTodoClient.Features.Authx.Store
-
-@inject IAuthxService AuthxService
-
-@code {
-    protected override void OnInitialized() => AuthxService.Logout();
-}

@@ -1,8 +1,12 @@
 @using System.IdentityModel.Tokens.Jwt
+@using BlazorTodoClient.Features.Authx.Store
+
+@inject IAuthxService AuthxService
+
 <AuthorizeView>
     <Authorized>
         Hello, @(context.User.FindFirst(JwtRegisteredClaimNames.Name)?.Value ?? "unknown user")
-        <a href="/logout">Log out</a>
+        <a href="/logout" @onclick="AuthxService.Logout" @onclick:preventDefault>Log out</a>
     </Authorized>
     <NotAuthorized>
         <a href="/register">Register</a>

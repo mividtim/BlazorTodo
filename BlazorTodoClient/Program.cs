@@ -6,6 +6,7 @@ using Blazored.LocalStorage;
 using BlazorTodoClient;
 using BlazorTodoClient.Features.Authx;
 using BlazorTodoClient.Features.Authx.Store;
+using BlazorTodoClient.Features.Navigation.Store;
 using BlazorTodoClient.Features.Todos.Store;
 using BlazorTodoClient.ServiceClients;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -25,7 +26,6 @@ builder.Services.AddHttpClient<BlazorTodoApiService>(client =>
 // Add authentication
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
-builder.Services.AddTransient<IAuthxService, AuthxService>();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthxStateProvider>();
 
 // Add Fluxor
@@ -35,7 +35,9 @@ builder.Services.AddFluxor(options =>
     options.UseReduxDevTools();
 });
 
-// Add custom application services
+// Add application services
+builder.Services.AddScoped<INavigationService, NavigationService>();
+builder.Services.AddScoped<IAuthxService, AuthxService>();
 builder.Services.AddScoped<ITodosService, TodosService>();
 
 await builder.Build().RunAsync();
