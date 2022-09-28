@@ -1,19 +1,21 @@
-using BlazorTodoClient.Store.State;
+using System.Diagnostics.CodeAnalysis;
 using Fluxor;
 
 namespace BlazorTodoClient.Features.Todos.Store.LoadTodoDetail;
 
-public static class LoadTodoDetailActionsReducer
+[SuppressMessage("ReSharper", "UnusedType.Global")]
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
+public static class LoadTodoDetailReducer
 {
     [ReducerMethod]
-    public static TodosState ReduceLoadTodoDetailAction(TodosState state, LoadTodoDetailAction _) =>
+    public static TodosState ReduceLoadTodoDetail(TodosState state, LoadTodoDetailAction action) =>
         new(true, null, state.CurrentTodos, null);
 
     [ReducerMethod]
-    public static TodosState ReduceLoadTodoDetailSuccessAction(TodosState state, LoadTodoDetailSuccessAction action) =>
+    public static TodosState ReduceLoadTodoDetailSuccess(TodosState state, LoadTodoDetailSuccessAction action) =>
         new(false, null, state.CurrentTodos, action.Todo);
 
     [ReducerMethod]
-    public static TodosState ReduceLoadTodoDetailFailureAction(TodosState state, LoadTodoDetailFailureAction action) =>
+    public static TodosState ReduceLoadTodoDetailFailure(TodosState state, LoadTodoDetailFailureAction action) =>
         new(false, action.ErrorMessage, state.CurrentTodos, null);
 }

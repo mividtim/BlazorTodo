@@ -1,16 +1,18 @@
-using BlazorTodoClient.Store.State;
+using System.Diagnostics.CodeAnalysis;
 using Fluxor;
 
 namespace BlazorTodoClient.Features.Todos.Store.DeleteTodo;
 
-public static class DeleteTodoActionsReducer
+[SuppressMessage("ReSharper", "UnusedType.Global")]
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
+public static class DeleteTodoReducer
 {
     [ReducerMethod]
-    public static TodosState ReduceDeleteTodoAction(TodosState state, DeleteTodoAction _) =>
+    public static TodosState ReduceDeleteTodo(TodosState state, DeleteTodoAction action) =>
         new(true, null, state.CurrentTodos, state.CurrentTodo);
 
     [ReducerMethod]
-    public static TodosState ReduceDeleteTodoSuccessAction(TodosState state, DeleteTodoSuccessAction action)
+    public static TodosState ReduceDeleteTodoSuccess(TodosState state, DeleteTodoSuccessAction action)
     {
         // Return the default state if no list of todos is found
         if (state.CurrentTodos is null)
@@ -23,6 +25,6 @@ public static class DeleteTodoActionsReducer
     }
 
     [ReducerMethod]
-    public static TodosState ReduceDeleteTodoFailureAction(TodosState state, DeleteTodoFailureAction action) =>
+    public static TodosState ReduceDeleteTodoFailure(TodosState state, DeleteTodoFailureAction action) =>
         new(false, action.ErrorMessage, state.CurrentTodos, state.CurrentTodo);
 }

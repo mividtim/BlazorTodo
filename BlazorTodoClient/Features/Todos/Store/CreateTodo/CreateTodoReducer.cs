@@ -1,17 +1,19 @@
-using BlazorTodoClient.Store.State;
+using System.Diagnostics.CodeAnalysis;
 using BlazorTodoDtos.Todos;
 using Fluxor;
 
 namespace BlazorTodoClient.Features.Todos.Store.CreateTodo;
 
-public static class CreateTodoActionsReducer
+[SuppressMessage("ReSharper", "UnusedType.Global")]
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
+public static class CreateTodoReducer
 {
     [ReducerMethod]
-    public static TodosState ReduceCreateTodoAction(TodosState state, CreateTodoAction _) =>
+    public static TodosState ReduceCreateTodo(TodosState state, CreateTodoAction action) =>
         new(true, null, state.CurrentTodos, state.CurrentTodo);
 
     [ReducerMethod]
-    public static TodosState ReduceCreateTodoSuccessAction(TodosState state, CreateTodoSuccessAction action)
+    public static TodosState ReduceCreateTodoSuccess(TodosState state, CreateTodoSuccessAction action)
     {
         // Grab a reference to the current to-do list, or initialize one if we do not currently have any loaded
         var newTodos = state.CurrentTodos?.ToList() ?? new List<TodoDto>(1);
@@ -22,6 +24,6 @@ public static class CreateTodoActionsReducer
     }
 
     [ReducerMethod]
-    public static TodosState ReduceCreateTodoFailureAction(TodosState state, CreateTodoFailureAction action) =>
+    public static TodosState ReduceCreateTodoFailure(TodosState state, CreateTodoFailureAction action) =>
         new(false, action.ErrorMessage, state.CurrentTodos, state.CurrentTodo);
 }

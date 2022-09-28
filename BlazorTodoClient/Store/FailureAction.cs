@@ -1,4 +1,4 @@
-namespace BlazorTodoClient.Store.Features.Todos.Actions.Shared;
+namespace BlazorTodoClient.Store;
 
 public abstract class FailureAction
 {

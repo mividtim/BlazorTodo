@@ -1,8 +1,8 @@
-namespace BlazorTodoClient.Store.State;
+namespace BlazorTodoClient.Store;
 
 public class BaseState
 {
-    public BaseState(bool isLoading, string? currentErrorMessage) =>
+    protected BaseState(bool isLoading, string? currentErrorMessage) =>
         (IsLoading, CurrentErrorMessage) = (isLoading, currentErrorMessage);
     
     public bool IsLoading { get;  }

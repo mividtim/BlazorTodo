@@ -1,20 +1,17 @@
 @page "/Register"
 
 @using BlazorTodoDtos.Authx
-@using BlazorTodoClient.Features.Authx
+@using BlazorTodoClient.Features.Authx.Store
 
+@inject IState<AuthxState> AuthxState
 @inject IAuthxService AuthxService
-@inject NavigationManager NavigationManager
 
 <h3>Registration</h3>
 
-@if (ShowRegistrationErrors)
+@if (AuthxState.Value.HasCurrentErrors)
 {
     <div class="alert alert-danger" role="alert">
-        @foreach (var error in Errors)
-        {
-            <p>@error</p>
-        }
+        <p>@AuthxState.Value.CurrentErrorMessage</p>
     </div>
 }
 <EditForm Model="_createUserDto" OnValidSubmit="ExecuteRegister" class="card card-body bg-light mt-5">
@@ -78,24 +75,7 @@
 </EditForm>
 
 @code {
-    private CreateUserDto _createUserDto = new CreateUserDto();
+    private readonly CreateUserDto _createUserDto = new();
 
-    public bool ShowRegistrationErrors { get; set; }
-    public IEnumerable<string> Errors { get; set; }
-
-    private async Task ExecuteRegister()
-    {
-        ShowRegistrationErrors = false;
-        try
-        {
-            await AuthxService.CreateUser(_createUserDto);
-        }
-        catch (Exception e)
-        {
-            Errors = new [] { e.Message };
-            ShowRegistrationErrors = true;
-            return;
-        }
-        NavigationManager.NavigateTo("/login");
-    }
+    private void ExecuteRegister() => AuthxService.Register(_createUserDto);
 }

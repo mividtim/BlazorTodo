@@ -2,7 +2,7 @@
 @using BlazorTodoClient.Features.Todos.Store
 @using BlazorTodoClient.Features.Todos.Models.Validation
 
-@inject TodosStateFacade Facade
+@inject ITodosService TodosService
 
 <EditForm Model="_validationModel" OnSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -31,6 +31,6 @@
     private void HandleValidSubmit()
     {
         // We use the bang operator (!) to tell the compiler we'll know this string field will not be null
-        Facade.CreateTodo(_validationModel.Title!, _validationModel.Completed);
+        TodosService.CreateTodo(_validationModel.Title!, _validationModel.Completed);
     }
 }

@@ -1,13 +1,16 @@
 @page "/Login"
 
-@using BlazorTodoClient.Features.Authx
+@using BlazorTodoClient.Features.Authx.Store
 @using BlazorTodoDtos.Authx
 
+@inject IState<AuthxState> AuthxState
+@inject IAuthxService AuthxService
+
 <h3>Login</h3>
-@if (ShowAuthError)
+@if (AuthxState.Value.CurrentErrorMessage is not null)
 {
     <div class="alert alert-danger" role="alert">
-        <p>@Error</p>
+        <p>@AuthxState.Value.CurrentErrorMessage</p>
     </div>
 }
 <EditForm Model="_userForAuthentication" OnValidSubmit="ExecuteLogin" class="card card-body bg-light mt-5">
@@ -35,29 +38,6 @@
 
 @code {
     private readonly CreateAuthxTokensDto _userForAuthentication = new();
-    [Inject]
-#pragma warning disable CS8618
-        public IAuthxService AuthxService { get; set; }
-    [Inject]
-    public NavigationManager NavigationManager { get; set; }
-#pragma warning restore CS8618
 
-    private bool ShowAuthError { get; set; }
-    private string? Error { get; set; }
-
-    private async Task ExecuteLogin()
-    {
-        ShowAuthError = false;
-        try
-        {
-            await AuthxService.Login(_userForAuthentication);
-        }
-        catch (UnauthorizedAccessException e)
-        {
-            Error = e.Message;
-            ShowAuthError = true;
-            return;
-        }
-        NavigationManager.NavigateTo("/");
-    } 
+    private void ExecuteLogin() => AuthxService.Login(_userForAuthentication);
 }

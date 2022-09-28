@@ -1,4 +1,4 @@
-using BlazorTodoClient.Store.State;
+using BlazorTodoClient.Store;
 using BlazorTodoDtos.Todos;
 
 namespace BlazorTodoClient.Features.Todos.Store;

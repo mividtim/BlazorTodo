@@ -1,24 +1,26 @@
-using BlazorTodoClient.Features.Authx.Store.UserLoginOrLogOut;
-using BlazorTodoClient.Store.State;
+using System.Diagnostics.CodeAnalysis;
+using BlazorTodoClient.Features.Authx.Store.Logout;
 using Fluxor;
 
 namespace BlazorTodoClient.Features.Todos.Store.LoadTodos;
 
-public static class LoadTodosActionsReducer
+[SuppressMessage("ReSharper", "UnusedType.Global")]
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
+public static class LoadTodosReducer
 {
     [ReducerMethod]
-    public static TodosState ReduceLoadTodosAction(TodosState state, LoadTodosAction _) =>
+    public static TodosState ReduceLoadTodos(TodosState state, LoadTodosAction action) =>
         new(true, null, null, state.CurrentTodo);
 
     [ReducerMethod]
-    public static TodosState ReduceLoadTodosSuccessAction(TodosState state, LoadTodosSuccessAction action) =>
+    public static TodosState ReduceLoadTodosSuccess(TodosState state, LoadTodosSuccessAction action) =>
         new(false, null, action.Todos, state.CurrentTodo);
 
     [ReducerMethod]
-    public static TodosState ReduceLoadTodosFailureAction(TodosState state, LoadTodosFailureAction action) =>
+    public static TodosState ReduceLoadTodosFailure(TodosState state, LoadTodosFailureAction action) =>
         new(false, action.ErrorMessage, null, state.CurrentTodo);
 
     [ReducerMethod]
-    public static TodosState UserLoggedOut(TodosState state, UserLoginOrLogOutAction _) =>
+    public static TodosState UserLoggedOut(TodosState state, LogoutSuccessAction action) =>
         new(false, null, null, null);
 }

@@ -1,4 +1,4 @@
-@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@inherits BlazorTodoClient.Features.Authx.Components.AuthxRequiredComponent
 
 @page "/todos"
 
@@ -6,9 +6,8 @@
 @using BlazorTodoClient.Features.Todos.Store
 
 @inject IState<TodosState> TodosState
-@inject TodosStateFacade Facade
+@inject ITodosService TodosService
 @inject NavigationManager Navigation
-@inject ILogger<Todos> Logger
 
 <h3 class="text-center mb-3">Todos</h3>
 
@@ -24,7 +23,7 @@ else if (TodosState.Value.HasCurrentErrors || TodosState.Value.CurrentTodos is n
 {
     <div class="d-flex flex-column align-items-center">
         <span class="py-2">Whoops! Looks like an issue occurred loading todos :(</span>
-        <button class="btn btn-info py-2" @onclick="() => Facade.LoadTodos()">Reload Todos</button>
+        <button class="btn btn-info py-2" @onclick="() => TodosService.LoadTodos()">Reload Todos</button>
     </div>
 }
 else if (!TodosState.Value.CurrentTodos.Any())
@@ -32,7 +31,7 @@ else if (!TodosState.Value.CurrentTodos.Any())
     <CreateTodoForm />
     <div class="d-flex flex-column align-items-center mt-2">
         <span class="py-2">Looks like there's no todos...</span>
-        <button class="btn btn-info py-2" @onclick="() => Facade.LoadTodos()">Reload Todos</button>
+        <button class="btn btn-info py-2" @onclick="() => TodosService.LoadTodos()">Reload Todos</button>
     </div>
 }
 else
@@ -58,33 +57,11 @@ else
 }
 
 @code {
-    [CascadingParameter]
-    public Task<AuthenticationState>? AuthState { get; set; }
-
-    private void NotLoggedIn()
-    {
-        Logger.LogInformation("Redirecting to login page");
-        Navigation.NavigateTo("/login");
-    }
-
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        if (AuthState is null)
-        {
-            NotLoggedIn();
-            return;
-        }
-        var authState = await AuthState;
-        if (authState.User.Identity?.IsAuthenticated != true)
-        {
-            NotLoggedIn();
-            return;
-        }
-        Logger.LogInformation("User is logged in... fetching Todos");
-        // Issue the load todos command, if no current todos have been loaded
         if (TodosState.Value.CurrentTodos is null)
-            Facade.LoadTodos();
+            TodosService.LoadTodos();
     }
 
     private void NavigateToTodoDetail(Guid id) => Navigation.NavigateTo($"todos/{id}");

@@ -12,19 +12,17 @@ public class AuthxController : ControllerBase
 {
     private readonly ILogger<AuthxController> _logger;
     private readonly UserManager<AuthxUser> _userManager;
-    private readonly SignInManager<AuthxUser> _signInManager;
     private readonly ITokenService _tokenService;
 
     public AuthxController(
         ILogger<AuthxController> logger,
         UserManager<AuthxUser> userManager,
-        SignInManager<AuthxUser> signInManager,
         ITokenService tokenService
-    ) => (_logger, _userManager, _signInManager, _tokenService) =
-        (logger, userManager, signInManager, tokenService);
+    ) => (_logger, _userManager, _tokenService) =
+        (logger, userManager, tokenService);
 
     [HttpPost("user")]
-    public async Task<ActionResult<UserDto>> CreateUser(CreateUserDto dto)
+    public async Task<ActionResult<AuthTokensDto>> CreateUser(CreateUserDto dto)
     {
         var normalized = CreateUserDto.Normalize(dto);
         var createUserResult = await _userManager.CreateAsync(
@@ -44,7 +42,8 @@ public class AuthxController : ControllerBase
         var newUser = await _userManager.FindByNameAsync(normalized.Email);
         if (newUser is null) return Problem("User not found immediately after creation");
         await _userManager.AddToRoleAsync(newUser, AuthxRoleConfiguration.VisitorRole);
-        return newUser.ToDto();
+        var authTokensDto = await CreateAuthTokenForUser(newUser);
+        return authTokensDto;
     }
 
     [HttpPost("token")]
@@ -61,8 +60,15 @@ public class AuthxController : ControllerBase
             _logger.LogInformation("Incorrect password for user with userName {UserName}", dto.UserName);
             return Unauthorized();
         }
+        var authTokensDto = await CreateAuthTokenForUser(user);
+        return authTokensDto;
+    }
+
+    private async Task<AuthTokensDto> CreateAuthTokenForUser(AuthxUser user)
+    {
         var roles = await _userManager.GetRolesAsync(user);
         var identityToken = _tokenService.CreateToken(user, roles);
-        return new AuthTokensDto(identityToken);
+        var dto = new AuthTokensDto(identityToken);
+        return dto;
     }
 }

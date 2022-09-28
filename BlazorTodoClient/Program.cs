@@ -5,6 +5,7 @@ using System.Net.Mime;
 using Blazored.LocalStorage;
 using BlazorTodoClient;
 using BlazorTodoClient.Features.Authx;
+using BlazorTodoClient.Features.Authx.Store;
 using BlazorTodoClient.Features.Todos.Store;
 using BlazorTodoClient.ServiceClients;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -35,6 +36,6 @@ builder.Services.AddFluxor(options =>
 });
 
 // Add custom application services
-builder.Services.AddScoped<TodosStateFacade>();
+builder.Services.AddScoped<ITodosService, TodosService>();
 
 await builder.Build().RunAsync();

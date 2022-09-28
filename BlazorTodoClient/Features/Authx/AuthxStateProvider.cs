@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using Blazored.LocalStorage;
+using BlazorTodoClient.Features.Authx.Store;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BlazorTodoClient.Features.Authx;
 
 public class AuthxStateProvider : AuthenticationStateProvider
 {
-    public const string LocalStorageKeyIdentityToken = "identityToken";
     private const string JwtAuthType = "jwtAuthType";
 
     private readonly AuthxMessageHandler _authxMessageHandler;
@@ -22,7 +22,7 @@ public class AuthxStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await _localStorage.GetItemAsync<string>(LocalStorageKeyIdentityToken);
+        var token = await _localStorage.GetItemAsync<string>(IAuthxService.LocalStorageKeyIdentityToken);
         if (string.IsNullOrWhiteSpace(token))
         {
             _authxMessageHandler.RemoveBearer();

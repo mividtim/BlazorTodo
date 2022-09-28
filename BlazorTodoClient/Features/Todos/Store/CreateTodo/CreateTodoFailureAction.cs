@@ -1,4 +1,4 @@
-using BlazorTodoClient.Store.Features.Todos.Actions.Shared;
+using BlazorTodoClient.Store;
 
 namespace BlazorTodoClient.Features.Todos.Store.CreateTodo;
 

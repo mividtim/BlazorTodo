@@ -8,12 +8,12 @@ using Fluxor;
 
 namespace BlazorTodoClient.Features.Todos.Store;
 
-public class TodosStateFacade
+public class TodosService : ITodosService
 {
-    private readonly ILogger<TodosStateFacade> _logger;
+    private readonly ILogger<TodosService> _logger;
     private readonly IDispatcher _dispatcher;
 
-    public TodosStateFacade(ILogger<TodosStateFacade> logger, IDispatcher dispatcher) =>
+    public TodosService(ILogger<TodosService> logger, IDispatcher dispatcher) =>
         (_logger, _dispatcher) = (logger, dispatcher);
 
     public void LoadTodos()

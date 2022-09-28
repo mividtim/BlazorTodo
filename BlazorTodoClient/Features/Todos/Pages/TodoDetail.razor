@@ -1,4 +1,4 @@
-@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@inherits BlazorTodoClient.Features.Authx.Components.AuthxRequiredComponent
 
 @page "/todos/{todoId}"
 
@@ -6,9 +6,7 @@
 @using BlazorTodoClient.Features.Todos.Store
 
 @inject IState<TodosState> TodosState
-@inject TodosStateFacade Facade
-@inject NavigationManager Navigation
-@inject ILogger<TodoDetail> Logger
+@inject ITodosService TodosService
 
 <h3 class="text-center mb-3">Detail for to-do item @(TodosState.Value.CurrentTodo?.Title ?? TodoId)</h3>
 
@@ -48,7 +46,7 @@ else
             <div class="d-flex flex-row justify-content-center pt-2">
                 <button type="submit" class="btn btn-secondary">Update</button>
                 <span class="px-2"></span>
-                <button class="btn btn-danger" @onclick="() => Facade.DeleteTodo(TodosState.Value.CurrentTodo.Id)">Delete</button>
+                <button class="btn btn-danger" @onclick="() => TodosService.DeleteTodo(TodosState.Value.CurrentTodo.Id)">Delete</button>
             </div>
             <div class="py-3">
                 <a class="btn btn-primary" href="/todos">Back to Todos</a>
@@ -60,38 +58,18 @@ else
 @code {
     private readonly CreateOrUpdateTodoValidationModel _validationModel = new();
 
-    [CascadingParameter]
-    public Task<AuthenticationState>? AuthState { get; set; }
-
     [Parameter]
     public string? TodoId { get; set; }
 
-    private void NotLoggedIn()
+    protected override async Task OnParametersSetAsync()
     {
-        Logger.LogInformation("Redirecting to login page");
-        Navigation.NavigateTo("/login");
-    }
-
-    protected override async void OnInitialized()
-    {
-        base.OnInitialized();
-        if (AuthState is null)
-        {
-            NotLoggedIn();
-            return;
-        }
-        var authState = await AuthState;
-        if (authState.User.Identity?.IsAuthenticated != true)
-        {
-            NotLoggedIn();
-            return;
-        }
+        await base.OnParametersSetAsync();
         // Issue the load todos command, if no current todos have been loaded
         if (TodosState.Value.CurrentTodos is null)
-            Facade.LoadTodos();
+            TodosService.LoadTodos();
         // Load the to-do detail on initial page navigation
         if (Guid.TryParse(TodoId, out var parsedId))
-            Facade.LoadTodoById(parsedId);
+            TodosService.LoadTodoById(parsedId);
         // Register a state change to assign the validation fields
         TodosState.StateChanged += (sender, _) =>
         {
@@ -106,6 +84,6 @@ else
     private void HandleValidSubmit()
     {
         // We use the bang operator (!) to tell the compiler we'll know this string field will not be null
-        Facade.UpdateTodo(TodosState.Value.CurrentTodo!.Id, _validationModel.Title!, _validationModel.Completed);
+        TodosService.UpdateTodo(TodosState.Value.CurrentTodo!.Id, _validationModel.Title!, _validationModel.Completed);
     }
 }
