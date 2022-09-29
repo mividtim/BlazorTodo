@@ -16,7 +16,7 @@ builder.RootComponents.Add<App>("app");
 
 // Add authenticated API client
 builder.Services.AddSingleton<AuthxMessageHandler>();
-builder.Services.AddHttpClient<BlazorTodoApiService>(client =>
+builder.Services.AddHttpClient<BlazorTodoApiClient>(client =>
 {
     client.DefaultRequestHeaders.Add("Content-Control", $"{MediaTypeNames.Application.Json}; charset=utf-8");
     client.BaseAddress = new Uri(builder.Configuration["ApiBase"]
@@ -39,5 +39,8 @@ builder.Services.AddFluxor(options =>
 builder.Services.AddScoped<INavigationService, NavigationService>();
 builder.Services.AddScoped<IAuthxService, AuthxService>();
 builder.Services.AddScoped<ITodosService, TodosService>();
+builder.Services.AddScoped<IGoogleService, GoogleService>(_ =>
+    new GoogleService(builder.Configuration["Google:ClientId"]
+                      ?? throw new ApplicationException("Google:ClientId not specified in configuration")));
 
 await builder.Build().RunAsync();

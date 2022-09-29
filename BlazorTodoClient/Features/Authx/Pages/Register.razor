@@ -5,6 +5,8 @@
 
 @inject IState<AuthxState> AuthxState
 @inject IAuthxService AuthxService
+@inject IGoogleService GoogleService
+@inject IJSRuntime JsRuntime
 
 <h3>Registration</h3>
 
@@ -72,10 +74,60 @@
             <button type="submit" class="btn btn-success">Register</button>
         </div>
     </div>
+        <div class="row">
+            <div class="col-md-12 text-right">
+                <div
+                    id="g_id_onload"
+                    data-client_id="@GoogleService.ClientId"
+                    data-callback="completeGoogleSignIn"
+                    data-auto_prompt="false"
+                    data-text="Register with Google">
+                </div>
+                <div
+                    class="g_id_signin"
+                    data-type="standard"
+                    data-size="large"
+                    data-theme="outline"
+                    data-text="sign_in_with"
+                    data-shape="rectangular"
+                    data-logo_alignment="left">
+                </div>
+            </div>
+        </div>
 </EditForm>
 
 @code {
     private readonly CreateUserDto _createUserDto = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await JsRuntime.InvokeVoidAsync("eval", @"
+            window.refToLogin = null;
+            if (!window.setupGoogleSignIn) {
+                window.setupGoogleSignIn = function(ref) {
+                    refToLogin = ref;
+                    const script = document.createElement('script');
+                    script.src = 'https://accounts.google.com/gsi/client';
+                    script.async = true;
+                    script.defer = true;
+                    document.body.append(script);
+                };
+            }
+            if (!window.completeGoogleSignIn) {
+                window.completeGoogleSignIn = async function(response) {
+                    while (refToLogin === null) await new Promise(resolve => setTimeout(resolve, 10));
+                    refToLogin.invokeMethodAsync('ExecuteLoginWithGoogle', response.credential);
+                }
+            }
+        ");
+        await JsRuntime.InvokeVoidAsync(
+            "window.setupGoogleSignIn",
+            DotNetObjectReference.Create(this));
+    }
+
     private void ExecuteRegister() => AuthxService.Register(_createUserDto);
+    
+    [JSInvokable]
+    public void ExecuteLoginWithGoogle(string credential) => AuthxService.LoginWithGoogle(credential);
 }

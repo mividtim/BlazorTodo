@@ -8,10 +8,10 @@ namespace BlazorTodoClient.Features.Todos.Store.LoadTodos;
 public class LoadTodosEffect : Effect<LoadTodosAction>
 {
     private readonly ILogger<LoadTodosEffect> _logger;
-    private readonly BlazorTodoApiService _apiService;
+    private readonly BlazorTodoApiClient _apiClient;
 
-    public LoadTodosEffect(ILogger<LoadTodosEffect> logger, BlazorTodoApiService apiService) =>
-        (_logger, _apiService) = (logger, apiService);
+    public LoadTodosEffect(ILogger<LoadTodosEffect> logger, BlazorTodoApiClient apiClient) =>
+        (_logger, _apiClient) = (logger, apiClient);
 
     public override async Task HandleAsync(LoadTodosAction action, IDispatcher dispatcher)
     {
@@ -21,7 +21,7 @@ public class LoadTodosEffect : Effect<LoadTodosAction>
             IEnumerable<TodoDto>? todosResponse;
             try
             {
-                todosResponse = await _apiService.GetAsync<IEnumerable<TodoDto>>("todos");
+                todosResponse = await _apiClient.GetAsync<IEnumerable<TodoDto>>("todos");
             }
             catch (AccessTokenNotAvailableException e)
             {

@@ -8,10 +8,10 @@ namespace BlazorTodoClient.Features.Todos.Store.UpdateTodo;
 public class UpdateTodoEffect : Effect<UpdateTodoAction>
 {
     private readonly ILogger<UpdateTodoEffect> _logger;
-    private readonly BlazorTodoApiService _apiService;
+    private readonly BlazorTodoApiClient _apiClient;
 
-    public UpdateTodoEffect(ILogger<UpdateTodoEffect> logger, BlazorTodoApiService apiService) =>
-        (_logger, _apiService) = (logger, apiService);
+    public UpdateTodoEffect(ILogger<UpdateTodoEffect> logger, BlazorTodoApiClient apiClient) =>
+        (_logger, _apiClient) = (logger, apiClient);
 
     public override async Task HandleAsync(UpdateTodoAction action, IDispatcher dispatcher)
     {
@@ -21,7 +21,7 @@ public class UpdateTodoEffect : Effect<UpdateTodoAction>
             HttpResponseMessage? updateResponse;
             try
             {
-                updateResponse = await _apiService.PutAsync($"todos/{action.Id}", action.Todo);
+                updateResponse = await _apiClient.PutAsync($"todos/{action.Id}", action.Todo);
             }
             catch (AccessTokenNotAvailableException e)
             {
@@ -36,7 +36,7 @@ public class UpdateTodoEffect : Effect<UpdateTodoAction>
             TodoDto? updatedTodo;
             try
             {
-                updatedTodo = await _apiService.GetAsync<TodoDto>($"todos/{action.Id}");
+                updatedTodo = await _apiClient.GetAsync<TodoDto>($"todos/{action.Id}");
             }
             catch (AccessTokenNotAvailableException e)
             {

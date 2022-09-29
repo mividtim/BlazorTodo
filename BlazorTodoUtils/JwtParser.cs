@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace BlazorTodoClient.Features.Authx;
+namespace BlazorTodoUtils;
 
 public static class JwtParser
 {

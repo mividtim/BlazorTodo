@@ -12,23 +12,23 @@ namespace BlazorTodoClient.Features.Authx.Store.Register;
 [SuppressMessage("ReSharper", "UnusedType.Global")]
 public class RegisterEffect : Effect<RegisterAction>
 {
-    private readonly BlazorTodoApiService _apiService;
+    private readonly BlazorTodoApiClient _apiClient;
     private readonly ILocalStorageService _localStorage;
     private readonly AuthxStateProvider _authxStateProvider;
     private readonly AuthxMessageHandler _authxMessageHandler;
 
     public RegisterEffect(
-        BlazorTodoApiService apiService,
+        BlazorTodoApiClient apiClient,
         AuthxMessageHandler authxMessageHandler,
         AuthenticationStateProvider authenticationStateProvider,
         ILocalStorageService localStorage
     ) =>
-        (_apiService, _authxMessageHandler, _authxStateProvider, _localStorage) =
-        (apiService, authxMessageHandler, (AuthxStateProvider)authenticationStateProvider, localStorage);
+        (_apiClient, _authxMessageHandler, _authxStateProvider, _localStorage) =
+        (apiClient, authxMessageHandler, (AuthxStateProvider)authenticationStateProvider, localStorage);
 
     public override async Task HandleAsync(RegisterAction action, IDispatcher dispatcher)
     {
-        var createResult = await _apiService.PostAsync("authx/user", action.CreateUserDto);
+        var createResult = await _apiClient.PostAsync("authx/user", action.CreateUserDto);
         if (!createResult.IsSuccessStatusCode)
         {
             if (createResult.StatusCode == HttpStatusCode.BadRequest)

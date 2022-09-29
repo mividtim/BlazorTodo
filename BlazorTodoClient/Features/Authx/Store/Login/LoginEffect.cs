@@ -1,43 +1,28 @@
 using System.Diagnostics.CodeAnalysis;
-using Blazored.LocalStorage;
 using BlazorTodoClient.ServiceClients;
-using BlazorTodoDtos.Authx;
 using Fluxor;
-using Microsoft.AspNetCore.Components.Authorization;
-using Newtonsoft.Json;
 
 namespace BlazorTodoClient.Features.Authx.Store.Login;
 
 [SuppressMessage("ReSharper", "UnusedType.Global")]
 public class LoginEffect : Effect<LoginAction>
 {
-    private readonly BlazorTodoApiService _apiService;
-    private readonly ILocalStorageService _localStorage;
-    private readonly AuthxStateProvider _authxStateProvider;
-    private readonly AuthxMessageHandler _authxMessageHandler;
+    private readonly BlazorTodoApiClient _apiClient;
+    private readonly IAuthxService _authxService;
 
-    public LoginEffect(
-        BlazorTodoApiService apiService,
-        AuthxMessageHandler authxMessageHandler,
-        AuthenticationStateProvider authenticationStateProvider,
-        ILocalStorageService localStorage
-    ) =>
-        (_apiService, _authxMessageHandler, _authxStateProvider, _localStorage) =
-        (apiService, authxMessageHandler, (AuthxStateProvider)authenticationStateProvider, localStorage);
+    public LoginEffect(BlazorTodoApiClient apiClient, IAuthxService authxService) =>
+        (_apiClient, _authxService) =
+        (apiClient, authxService);
 
     public override async Task HandleAsync(LoginAction action, IDispatcher dispatcher)
     {
-        var authResult = await _apiService.PostAsync("authx/token", action.CreateAuthxTokensDto);
+        var authResult = await _apiClient.PostAsync("authx/token", action.CreateAuthxTokensDto);
         if (!authResult.IsSuccessStatusCode)
         {
-            dispatcher.Dispatch(new LoginFailureAction(authResult.ReasonPhrase));
+            dispatcher.Dispatch(new LoginFailureAction(authResult.ReasonPhrase ?? "Unknown reason"));
             throw new UnauthorizedAccessException();
         }
-        var jsonString = await authResult.Content.ReadAsStringAsync();
-        var authTokens = JsonConvert.DeserializeObject<AuthTokensDto>(jsonString);
-        await _localStorage.SetItemAsync(IAuthxService.LocalStorageKeyIdentityToken, authTokens.IdentityToken);
-        _authxStateProvider.NotifyUserLoggedIn(authTokens.IdentityToken);
-        _authxMessageHandler.AddBearer(authTokens.IdentityToken);
+        await _authxService.CompleteLoginWithAuthResult(authResult);
         dispatcher.Dispatch(new LoginSuccessAction());
     }
 }

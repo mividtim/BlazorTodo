@@ -3,12 +3,12 @@ using System.Net.Http.Json;
 
 namespace BlazorTodoClient.ServiceClients;
 
-public class BlazorTodoApiService
+public class BlazorTodoApiClient
 {
-    private readonly ILogger<BlazorTodoApiService> _logger;
+    private readonly ILogger<BlazorTodoApiClient> _logger;
     private readonly HttpClient _httpClient;
 
-    public BlazorTodoApiService(ILogger<BlazorTodoApiService> logger, HttpClient httpClient) =>
+    public BlazorTodoApiClient(ILogger<BlazorTodoApiClient> logger, HttpClient httpClient) =>
         (_logger, _httpClient) = (logger, httpClient);
 
     public Task<TResponse?> GetAsync<TResponse>(string path)

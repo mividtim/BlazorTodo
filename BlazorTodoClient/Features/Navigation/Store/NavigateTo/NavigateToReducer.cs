@@ -11,7 +11,8 @@ public static class NavigateToReducer
 
     [ReducerMethod]
     public static NavigationState ReduceNavigateTo(NavigationState state, NavigateToAction action) =>
-        action.Route == state.CurrentRoute || AuthxRoutes.Contains(action.Route)
-            ? state
-            : new NavigationState(action.Route, state.CurrentRoute);
+        new(action.Route, 
+            AuthxRoutes.Contains(state.CurrentRoute)
+                ? state.PreviousRoute
+                : state.CurrentRoute);
 }

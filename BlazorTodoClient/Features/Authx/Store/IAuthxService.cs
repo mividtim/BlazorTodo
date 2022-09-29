@@ -8,5 +8,7 @@ public interface IAuthxService
 
     void Register(CreateUserDto dto);
     void Login(CreateAuthxTokensDto dto);
+    void LoginWithGoogle(string credential);
+    Task CompleteLoginWithAuthResult(HttpResponseMessage authResult);
     void Logout();
 }

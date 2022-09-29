@@ -7,10 +7,10 @@ namespace BlazorTodoClient.Features.Todos.Store.DeleteTodo;
 public class DeleteTodoEffect : Effect<DeleteTodoAction>
 {
     private readonly ILogger<DeleteTodoEffect> _logger;
-    private readonly BlazorTodoApiService _apiService;
+    private readonly BlazorTodoApiClient _apiClient;
 
-    public DeleteTodoEffect(ILogger<DeleteTodoEffect> logger, BlazorTodoApiService apiService) =>
-        (_logger, _apiService) = (logger, apiService);
+    public DeleteTodoEffect(ILogger<DeleteTodoEffect> logger, BlazorTodoApiClient apiClient) =>
+        (_logger, _apiClient) = (logger, apiClient);
 
     public override async Task HandleAsync(DeleteTodoAction action, IDispatcher dispatcher)
     {
@@ -20,7 +20,7 @@ public class DeleteTodoEffect : Effect<DeleteTodoAction>
             HttpResponseMessage? deleteResponse;
             try
             {
-                deleteResponse = await _apiService.DeleteAsync($"todos/{action.Id}");
+                deleteResponse = await _apiClient.DeleteAsync($"todos/{action.Id}");
             }
             catch (AccessTokenNotAvailableException e)
             {

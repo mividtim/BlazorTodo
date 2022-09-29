@@ -9,10 +9,10 @@ namespace BlazorTodoClient.Features.Todos.Store.CreateTodo;
 public class CreateTodoEffect : Effect<CreateTodoAction>
 {
     private readonly ILogger<CreateTodoEffect> _logger;
-    private readonly BlazorTodoApiService _apiService;
+    private readonly BlazorTodoApiClient _apiClient;
     
-    public CreateTodoEffect(ILogger<CreateTodoEffect> logger, BlazorTodoApiService apiService) =>
-        (_logger, _apiService) = (logger, apiService);
+    public CreateTodoEffect(ILogger<CreateTodoEffect> logger, BlazorTodoApiClient apiClient) =>
+        (_logger, _apiClient) = (logger, apiClient);
 
     public override async Task HandleAsync(CreateTodoAction action, IDispatcher dispatcher)
     {
@@ -22,7 +22,7 @@ public class CreateTodoEffect : Effect<CreateTodoAction>
             HttpResponseMessage? createResponse;
             try
             {
-                createResponse = await _apiService.PostAsync("todos", action.Todo);
+                createResponse = await _apiClient.PostAsync("todos", action.Todo);
             }
             catch (AccessTokenNotAvailableException e)
             {

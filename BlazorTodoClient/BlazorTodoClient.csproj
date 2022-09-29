@@ -28,6 +28,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BlazorTodoDtos\BlazorTodoDtos.csproj" />
+      <ProjectReference Include="..\BlazorTodoUtils\BlazorTodoUtils.csproj" />
     </ItemGroup>
 
     <ItemGroup>
